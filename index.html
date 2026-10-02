@@ -19,7 +19,7 @@
 </header>
 <main id="create">
   <section class="left-column">
-    <div class="intro-panel"><p class="eyebrow">YOUR CREATURE LAB</p><h2>Build a creature from your imagination!</h2><p>Choose an animal, add body parts and pick some clothes. Your choices become a creative English challenge.</p></div>
+    <div class="intro-panel"><p class="eyebrow">PART 2 · MY CREATURE</p><h2>Give your creature an identity!</h2><p>Choose the look, then give your creature a name, ability and personality. These details become part of its reusable character profile.</p></div>
     <div class="category" data-category="animal"><h2>🐾 Animals</h2><div class="cards">
       <button class="card" data-value="cat" onclick="selectCard(this)"><img src="imagesbbx/cat.jpg" alt="Cat"><span>Cat</span></button>
       <button class="card" data-value="dog" onclick="selectCard(this)"><img src="imagesbbx/dog.jpg" alt="Dog"><span>Dog</span></button>
@@ -66,8 +66,17 @@
     </div></div>
   </section>
   <section class="right-column">
-    <div class="whiteboard" id="play"><p class="eyebrow">PLAY</p><h2>✏️ English Whiteboard</h2><p id="instruction">Click “New Task” to start.</p><textarea id="sentence" placeholder="Your example will appear here..."></textarea><div class="controls"><button class="primary" onclick="newInstruction()">🎲 New Task</button><button class="danger" onclick="clearSelections()">✖ Reset</button></div></div>
-    <div class="combo-result"><p class="eyebrow">CREATE</p><h3>🌟 Your Creature Preview</h3><p id="selectionSummary" class="selection-summary">Choose one card from each category.</p><div id="comboArea"><img id="comboImage" src="" alt="Generated creature" style="display:none"><p id="comboMessage" class="fun-message">Your original BrainBoom image will appear here when all three categories are selected.</p></div></div>
+    <div class="whiteboard" id="play"><p class="eyebrow">PART 2 · PLAY</p><h2>✏️ English Whiteboard</h2><p id="instruction">Click “New Task” to start.</p><textarea id="sentence" placeholder="Your example will appear here..."></textarea><div class="controls"><button class="primary" onclick="newInstruction()">🎲 New Task</button><button class="danger" onclick="clearSelections()">✖ Reset</button></div></div>
+    <div class="combo-result"><p class="eyebrow">CREATE YOUR CHARACTER</p><h3>🌟 My Creature</h3>
+      <div class="profile-form">
+        <label for="creatureName">Creature name</label><input id="creatureName" maxlength="24" placeholder="e.g. Fluffyshark" autocomplete="off">
+        <label for="creatureAbility">Special ability</label><input id="creatureAbility" maxlength="50" placeholder="e.g. I can jump very high." autocomplete="off">
+        <label for="creaturePersonality">Personality</label><select id="creaturePersonality"><option value="friendly">Friendly</option><option value="brave">Brave</option><option value="funny">Funny</option><option value="curious">Curious</option><option value="kind">Kind</option><option value="adventurous">Adventurous</option></select>
+      </div>
+      <p id="selectionSummary" class="selection-summary">Choose one card from each category.</p>
+      <div class="create-actions"><button id="createButton" class="primary" onclick="createCreature()">✨ Create My Creature</button><button id="saveButton" class="save" onclick="saveCreature()" disabled>💾 Save Creature</button></div>
+      <div id="comboArea"><img id="comboImage" src="" alt="Generated creature" style="display:none"><p id="comboMessage" class="fun-message">Your character will appear here after you create it.</p></div>
+    </div>
     <div class="future-panel" id="speak"><span>🎙️</span><div><b>Speak</b><p>Your creature will become your speaking companion in a future stage.</p></div></div>
     <div class="future-panel" id="grow"><span>🌱</span><div><b>Grow</b><p>Your language progress and creature evolution will live here later.</p></div></div>
   </section>

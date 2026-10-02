@@ -1,16 +1,13 @@
-# BrainBoom X² — Part 1
+# BrainBoom X² — Part 2: My Creature
 
-Foundation upgrade built from the original Brainboom-Cards project.
+Part 2 builds on Part 1 and begins the reusable-creature foundation for the future 2D puppet system.
 
-## Included
-- BrainBoom X² identity and Create/Play/Speak/Grow journey
-- Responsive mobile/tablet/desktop layout
-- Existing Animals, Body Parts and Clothes cards preserved
-- Existing Vercel Stability image endpoint preserved
-- Selection summary
-- Local browser persistence for current selections
-- English whiteboard tasks
-- Placeholder panels for future Speak and Grow systems
+## New
+- Creature name, special ability and personality
+- Explicit Create My Creature action
+- Character-aware image prompt
+- Save generated concept as PNG + JSON profile
+- Browser persistence for current creature/selection state
+- Future rig metadata: visualVersion, rigVersion, rigStatus, learnerLevel and XP
 
-## Deploy
-Upload this folder to the same GitHub repository or a new Vercel project. Keep `STABILITY_API_KEY` in Vercel environment variables for the existing API.
+This is intentionally **concept art, not a rigged puppet**. The next stage can add transparent body-part assets, pivots/skeleton data and a Rive/PixiJS prototype.
