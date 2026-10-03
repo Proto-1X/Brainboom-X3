@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#6757d9" />
+  <meta name="description" content="BrainBoom X² — Create. Play. Speak. Grow." />
+  <title>Creature | BrainBoom X²</title>
+  <link rel="stylesheet" href="style.css" />
+</head><body><header>
+  <div class="brand">✦ BRAINBOOM <strong>X²</strong></div>
+  <h1>The AI Language Adventure</h1>
+  <p class="tagline">Create. Play. Speak. Grow.</p>
+  <nav class="journey" id="pageNav" aria-label="BrainBoom adventure"><a href="index.html" data-file="index.html">Home</a><a href="create.html" data-file="create.html">Create</a><a href="creature.html" data-file="creature.html">Creature</a><a href="play.html" data-file="play.html">Play</a><a href="speak.html" data-file="speak.html">Speak</a><a href="grow.html" data-file="grow.html">Grow</a><a href="profile.html" data-file="profile.html">Profile</a></nav>
+</header><main class="screens physical-page page-creature"><div class="combo-result"><p class="eyebrow">CREATE YOUR CHARACTER</p><h3>🌟 My Creature</h3>
+      <div class="profile-form">
+        <label for="creatureName">Creature name</label><input id="creatureName" maxlength="24" placeholder="e.g. Fluffyshark" autocomplete="off">
+        <label for="creatureAbility">Special ability</label><input id="creatureAbility" maxlength="50" placeholder="e.g. I can jump very high." autocomplete="off">
+        <label for="creaturePersonality">Personality</label><select id="creaturePersonality"><option value="friendly">Friendly</option><option value="brave">Brave</option><option value="funny">Funny</option><option value="curious">Curious</option><option value="kind">Kind</option><option value="adventurous">Adventurous</option></select>
+      </div>
+      <p id="selectionSummary" class="selection-summary">Choose one card from each category.</p>
+      <div class="create-actions"><button id="createButton" class="primary" onclick="createCreature()">✨ Create My Creature</button><button id="saveButton" class="save" onclick="saveCreature()" disabled>💾 Save Creature</button></div>
+      <div id="comboArea"><img id="comboImage" src="" alt="Generated creature" style="display:none"><p id="comboMessage" class="fun-message">Your character will appear here after you create it.</p></div>
+    <div class="actions"><a class="btn secondary" href="create.html">Edit my choices</a><a class="btn" href="play.html">Start learning</a></div></div></main><footer>BrainBoom X² · Create. Play. Speak. Grow.</footer><script src="script.js"></script><script src="pages.js"></script></body></html>
