@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#6757d9" />
+  <meta name="description" content="BrainBoom X² — Create. Play. Speak. Grow." />
+  <title>BrainBoom X² | The AI Language Adventure</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <div class="brand">✦ BRAINBOOM <strong>X²</strong></div>
+  <h1>The AI Language Adventure</h1>
+  <p class="tagline">Create. Play. Speak. Grow.</p>
+  <nav class="journey" id="pageNav" aria-label="BrainBoom adventure"><a href="#home">Home</a><a href="#create">Create</a><a href="#creature">Creature</a><a href="#play">Play</a><a href="#speak">Speak</a><a href="#grow">Grow</a><a href="#profile">Profile</a></nav>
+</header>
+<main id="create" class="screens"><section class="screen" id="screen-home"><div class="home-card"><p class="eyebrow">BRAINBOOM X² · YOUR ADVENTURE</p><h2>A little creature. A big adventure.</h2><p>Create a one-of-a-kind friend, then use English to explore the world together.</p><a class="home-start" href="#create">Start creating →</a><div class="home-steps"><span>Create</span><span>Play</span><span>Speak</span><span>Grow</span></div></div></section>
+  <section class="left-column">
+    <div class="intro-panel"><p class="eyebrow">PART 2 · MY CREATURE</p><h2>Give your creature an identity!</h2><p>Choose the look, then give your creature a name, ability and personality. These details become part of its reusable character profile.</p></div>
+    <div class="category" data-category="animal"><h2>🐾 Animals</h2><div class="cards">
+      <button class="card" data-value="cat" onclick="selectCard(this)"><img src="imagesbbx/cat.jpg" alt="Cat"><span>Cat</span></button>
+      <button class="card" data-value="dog" onclick="selectCard(this)"><img src="imagesbbx/dog.jpg" alt="Dog"><span>Dog</span></button>
+      <button class="card" data-value="tiger" onclick="selectCard(this)"><img src="imagesbbx/tiger.jpg" alt="Tiger"><span>Tiger</span></button>
+      <button class="card" data-value="lion" onclick="selectCard(this)"><img src="imagesbbx/lion.jpg" alt="Lion"><span>Lion</span></button>
+      <button class="card" data-value="elephant" onclick="selectCard(this)"><img src="imagesbbx/elephant.jpg" alt="Elephant"><span>Elephant</span></button>
+      <button class="card" data-value="bird" onclick="selectCard(this)"><img src="imagesbbx/bird.jpg" alt="Bird"><span>Bird</span></button>
+      <button class="card" data-value="lizard" onclick="selectCard(this)"><img src="imagesbbx/lizard.jpg" alt="Lizard"><span>Lizard</span></button>
+    </div></div>
+    <div class="category" data-category="bodyparts"><h2>🧩 Body Parts</h2><p class="hint">Tap more than one if you want!</p><div class="cards">
+      <button class="card" data-value="head" onclick="selectCard(this)"><img src="imagesbbx/head.jpg" alt="Head"><span>Head</span></button>
+      <button class="card" data-value="human arms" onclick="selectCard(this)"><img src="imagesbbx/arm.jpg" alt="Arms"><span>Arms</span></button>
+      <button class="card" data-value="human fingers" onclick="selectCard(this)"><img src="imagesbbx/fingers.jpg" alt="Fingers"><span>Fingers</span></button>
+      <button class="card" data-value="human hands" onclick="selectCard(this)"><img src="imagesbbx/hand.jpg" alt="Hands"><span>Hands</span></button>
+      <button class="card" data-value="human knee" onclick="selectCard(this)"><img src="imagesbbx/knee.jpg" alt="Knee"><span>Knee</span></button>
+      <button class="card" data-value="human legs" onclick="selectCard(this)"><img src="imagesbbx/legs.jpg" alt="Legs"><span>Legs</span></button>
+      <button class="card" data-value="toes" onclick="selectCard(this)"><img src="imagesbbx/toes.jpg" alt="Toes"><span>Toes</span></button>
+      <button class="card" data-value="human feet" onclick="selectCard(this)"><img src="imagesbbx/foot.jpg" alt="Feet"><span>Feet</span></button>
+      <button class="card" data-value="tiger's tail" onclick="selectCard(this)"><img src="imagesbbx/tigers-tail.jpg" alt="Tiger's tail"><span>Tiger's tail</span></button>
+      <button class="card" data-value="lion's tail" onclick="selectCard(this)"><img src="imagesbbx/lions-tail.jpg" alt="Lion's tail"><span>Lion's tail</span></button>
+      <button class="card" data-value="elephant's trunk" onclick="selectCard(this)"><img src="imagesbbx/elephants-trunk.jpg" alt="Elephant's trunk"><span>Elephant's trunk</span></button>
+      <button class="card" data-value="cat's claws" onclick="selectCard(this)"><img src="imagesbbx/cats-claws.jpg" alt="Cat's claws"><span>Cat's claws</span></button>
+      <button class="card" data-value="dog ears" onclick="selectCard(this)"><img src="imagesbbx/dog-ears.jpg" alt="Dog ears"><span>Dog ears</span></button>
+      <button class="card" data-value="lizard's tail" onclick="selectCard(this)"><img src="imagesbbx/lizards-tail.jpg" alt="Lizard's tail"><span>Lizard's tail</span></button>
+      <button class="card" data-value="bird's beak" onclick="selectCard(this)"><img src="imagesbbx/birds-beak.jpg" alt="Bird's beak"><span>Bird's beak</span></button>
+      <button class="card" data-value="bird's wings" onclick="selectCard(this)"><img src="imagesbbx/birds-wings.jpg" alt="Bird's wings"><span>Bird's wings</span></button>
+      <button class="card" data-value="lion's paw" onclick="selectCard(this)"><img src="imagesbbx/lions-paw.jpg" alt="Lion's paw"><span>Lion's paw</span></button>
+    </div></div>
+    <div class="category" data-category="clothes"><h2>👕 Clothes</h2><div class="cards">
+      <button class="card" data-value="jeans" onclick="selectCard(this)"><img src="imagesbbx/jeans.jpg" alt="Jeans"><span>Jeans</span></button>
+      <button class="card" data-value="sweater" onclick="selectCard(this)"><img src="imagesbbx/sweater.jpg" alt="Sweater"><span>Sweater</span></button>
+      <button class="card" data-value="jacket" onclick="selectCard(this)"><img src="imagesbbx/jacket.jpg" alt="Jacket"><span>Jacket</span></button>
+      <button class="card" data-value="shirt" onclick="selectCard(this)"><img src="imagesbbx/shirt.jpg" alt="Shirt"><span>Shirt</span></button>
+      <button class="card" data-value="dress" onclick="selectCard(this)"><img src="imagesbbx/dress.jpg" alt="Dress"><span>Dress</span></button>
+      <button class="card" data-value="hat" onclick="selectCard(this)"><img src="imagesbbx/hat.jpg" alt="Hat"><span>Hat</span></button>
+      <button class="card" data-value="skirt" onclick="selectCard(this)"><img src="imagesbbx/skirt.jpg" alt="Skirt"><span>Skirt</span></button>
+      <button class="card" data-value="shorts" onclick="selectCard(this)"><img src="imagesbbx/shorts.jpg" alt="Shorts"><span>Shorts</span></button>
+      <button class="card" data-value="cap" onclick="selectCard(this)"><img src="imagesbbx/cap.jpg" alt="Cap"><span>Cap</span></button>
+      <button class="card" data-value="shoes" onclick="selectCard(this)"><img src="imagesbbx/shoes.jpg" alt="Shoes"><span>Shoes</span></button>
+      <button class="card" data-value="socks" onclick="selectCard(this)"><img src="imagesbbx/socks.jpg" alt="Socks"><span>Socks</span></button>
+      <button class="card" data-value="trainers" onclick="selectCard(this)"><img src="imagesbbx/trainers.jpg" alt="Trainers"><span>Trainers</span></button>
+      <button class="card" data-value="trousers" onclick="selectCard(this)"><img src="imagesbbx/trousers.jpg" alt="Trousers"><span>Trousers</span></button>
+      <button class="card" data-value="helmet" onclick="selectCard(this)"><img src="imagesbbx/helmet.jpg" alt="Helmet"><span>Helmet</span></button>
+    </div></div>
+  </section>
+  <section class="right-column">
+    <div class="whiteboard" id="play"><p class="eyebrow">PART 2 · PLAY</p><h2>✏️ English Whiteboard</h2><p id="instruction">Click “New Task” to start.</p><textarea id="sentence" placeholder="Your example will appear here..."></textarea><div class="controls"><button class="primary" onclick="newInstruction()">🎲 New Task</button><button class="danger" onclick="clearSelections()">✖ Reset</button></div></div>
+    <div class="combo-result"><p class="eyebrow">CREATE YOUR CHARACTER</p><h3>🌟 My Creature</h3>
+      <div class="profile-form">
+        <label for="creatureName">Creature name</label><input id="creatureName" maxlength="24" placeholder="e.g. Fluffyshark" autocomplete="off">
+        <label for="creatureAbility">Special ability</label><input id="creatureAbility" maxlength="50" placeholder="e.g. I can jump very high." autocomplete="off">
+        <label for="creaturePersonality">Personality</label><select id="creaturePersonality"><option value="friendly">Friendly</option><option value="brave">Brave</option><option value="funny">Funny</option><option value="curious">Curious</option><option value="kind">Kind</option><option value="adventurous">Adventurous</option></select>
+      </div>
+      <p id="selectionSummary" class="selection-summary">Choose one card from each category.</p>
+      <div class="create-actions"><button id="createButton" class="primary" onclick="createCreature()">✨ Create My Creature</button><button id="saveButton" class="save" onclick="saveCreature()" disabled>💾 Save Creature</button></div>
+      <div id="comboArea"><img id="comboImage" src="" alt="Generated creature" style="display:none"><p id="comboMessage" class="fun-message">Your character will appear here after you create it.</p></div>
+    </div>
+    <div class="future-panel" id="speak"><span>🎙️</span><div><b>Speak</b><p>Your creature will become your speaking companion in a future stage.</p></div></div>
+    <div class="future-panel" id="grow"><span>🌱</span><div><b>Grow</b><p>Your language progress and creature evolution will live here later.</p></div></div>
+  </section>
+</main>
+<footer>BrainBoom X² · Create. Play. Speak. Grow.</footer>
+<script src="script.js"></script><script src="pages.js"></script>
+</body>
+</html>
