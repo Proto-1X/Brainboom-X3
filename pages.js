@@ -29,6 +29,23 @@ const draft=host.querySelector("#writingAnswer");if(draft)draft.oninput=()=>{pro
 const submit=host.querySelector("#submitWriting");if(submit)submit.onclick=submitWriting;
 const next=host.querySelector("#continueStage");if(next)next.onclick=()=>{active=active==="grammar"?"sentences":"story";view="lesson";notice="";lastScore=null;save();render()};
 const retry=host.querySelector("#retry");if(retry)retry.onclick=()=>{view="activity";notice="";lastScore=null;render()};
+
+// Load the player's most recently created creature
+const avatar=host.querySelector("#playCreatureAvatar");
+if(avatar){
+  try{
+    const creatures=JSON.parse(localStorage.getItem("bbx2-player-creatures")||"[]");
+    const creature=creatures[0];
+
+    if(creature&&creature.icon){
+      avatar.innerHTML=
+        '<img src="'+creature.icon+'" alt="'+safe(creature.name||"My creature")+'" style="width:100%;height:100%;object-fit:contain;border-radius:16px;">'+
+        '<span>'+safe(creature.name||"My Creature")+'</span>';
+    }
+  }catch(e){
+    console.warn("Could not load creature in Play page",e);
+  }
+}
 }
 function renderActivity(s){if(view==="lesson")return '<button class="btn begin-checkpoint" id="beginCheckpoint">'+(progress.started[active]?"Continue to checkpoint":"I understand - begin checkpoint")+'</button>';
 if(s.type==="quiz")return '<p>Answer all five questions. You need four correct to pass.</p><div class="quiz-list">'+s.questions.map((q,i)=>'<fieldset class="quiz-question"><legend>'+(i+1)+'. '+q.q+'</legend>'+q.options.map((o,j)=>'<label><input type="radio" name="q'+i+'" data-answer value="'+j+'" '+(progress.answers["q"+i]===j?"checked":"")+'> '+o+'</label>').join("")+'</fieldset>').join("")+'</div><button class="btn" id="submitQuiz">Check my answers</button>'+resultMarkup(s);
