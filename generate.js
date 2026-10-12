@@ -1,77 +1,115 @@
-// api/generate.js
-// Vercel Serverless function (Node/Edge compatible). Uses Stability AI text->image endpoint.
-// Set STABILITY_API_KEY in Vercel Environment Variables.
+// Vercel Serverless Function: POST /api/generate
+// Primary provider: Gemini image generation.
+// Optional fallback: Stability AI, if STABILITY_API_KEY is also configured.
+
+const GEMINI_MODEL = "gemini-2.5-flash-image";
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  let body = req.body;
+  if (typeof body === "string") {
+    try { body = JSON.parse(body); } catch { body = {}; }
+  }
+
+  const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
+  if (!prompt) return res.status(400).json({ error: "Missing prompt" });
+  if (prompt.length > 8000) {
+    return res.status(413).json({ error: "Prompt is too long. Please shorten your creature description." });
+  }
+
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (!geminiKey) {
+    return res.status(500).json({
+      error: "Server is missing GEMINI_API_KEY. Add it in Vercel Project Settings → Environment Variables, then redeploy."
+    });
   }
 
   try {
-    const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": geminiKey,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ["IMAGE"] }
+        })
+      }
+    );
 
-    const apiKey = process.env.STABILITY_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: 'Server not configured: STABILITY_API_KEY' });
-
-    // Choose a model available to your account. Example: stable-diffusion-xl-1024-v1-0
-    const model = 'stable-diffusion-xl-1024-v1-0';
-
-    // Build request to Stability API (text-to-image)
-    const stabilityUrl = `https://api.stability.ai/v1/generation/${model}/text-to-image`;
-
-    const body = {
-      text_prompts: [
-        {
-          text: prompt
-        }
-      ],
-      // cfg_scale, steps, samples etc — tune as needed
-      cfg_scale: 7,
-      clip_guidance_preset: 'NONE',
-      height: 1024,
-      width: 1024,
-      samples: 1
-    };
-
-    const response = await fetch(stabilityUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const details = await response.text();
-      console.error('Stability API error:', details);
-      return res.status(response.status).json({ error: 'Stability API error', details });
+      const apiMessage = data?.error?.message || `Gemini API returned HTTP ${response.status}`;
+      console.error("Gemini image generation failed:", response.status, apiMessage);
+
+      // Keep the previous provider as an optional fallback if its key is configured.
+      if (process.env.STABILITY_API_KEY) {
+        const fallback = await generateWithStability(prompt, process.env.STABILITY_API_KEY);
+        if (fallback) return res.status(200).json({ imageBase64: fallback, provider: "stability-fallback" });
+      }
+
+      const status = response.status === 429 ? 429 : (response.status === 403 || response.status === 401 ? 502 : 502);
+      return res.status(status).json({
+        error: "Gemini image generation failed.",
+        details: apiMessage
+      });
     }
 
-    // Many Stability endpoints return JSON with base64 in `artifacts` or `images`.
+    const parts = data?.candidates?.flatMap(candidate => candidate?.content?.parts || []) || [];
+    const imagePart = parts.find(part => part?.inlineData?.data || part?.inline_data?.data);
+    const imageBase64 = imagePart?.inlineData?.data || imagePart?.inline_data?.data;
+    if (!imageBase64) {
+      console.error("Gemini returned no image data.");
+      return res.status(502).json({
+        error: "Gemini responded, but no image was included. Check that the API key and model have image-generation access."
+      });
+    }
+
+    return res.status(200).json({
+      imageBase64,
+      mimeType: imagePart?.inlineData?.mimeType || imagePart?.inline_data?.mime_type || "image/png",
+      provider: "gemini"
+    });
+  } catch (error) {
+    console.error("Image generation server error:", error);
+    return res.status(500).json({ error: "The image-generation server encountered an unexpected error." });
+  }
+}
+
+async function generateWithStability(prompt, apiKey) {
+  try {
+    const response = await fetch(
+      "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          text_prompts: [{ text: prompt }],
+          cfg_scale: 7,
+          height: 1024,
+          width: 1024,
+          samples: 1
+        })
+      }
+    );
+    if (!response.ok) {
+      console.error("Stability fallback failed with HTTP", response.status);
+      return null;
+    }
     const data = await response.json();
-
-    // Try several common paths to get base64
-    let base64 = null;
-    if (data?.images && Array.isArray(data.images) && data.images[0]?.b64_json) {
-      base64 = data.images[0].b64_json;
-    } else if (data?.artifacts && data.artifacts[0]?.base64) {
-      base64 = data.artifacts[0].base64;
-    } else if (data?.artifacts && data.artifacts[0]?.b64_json) {
-      base64 = data.artifacts[0].b64_json;
-    }
-
-    if (!base64) {
-      // If Stability returns a different shape, return the whole object for debugging (will show in console)
-      return res.status(200).json({ error: 'no_base64', raw: data });
-    }
-
-    // Return normalized object to the frontend
-    return res.status(200).json({ imageBase64: base64 });
-  } catch (err) {
-    console.error('Server error', err);
-    return res.status(500).json({ error: 'server_error', details: String(err) });
+    return data?.artifacts?.[0]?.base64 || data?.artifacts?.[0]?.b64_json || data?.images?.[0]?.b64_json || null;
+  } catch (error) {
+    console.error("Stability fallback error:", error);
+    return null;
   }
 }
