@@ -8,7 +8,37 @@ function updateSummary(){const items=[selections.animal,...selections.bodyparts,
 function clearSelections(){document.querySelectorAll('.card.selected').forEach(c=>c.classList.remove('selected'));selections.animal=null;selections.bodyparts=[];selections.clothes=null;latestCreature=null;requestId++;document.getElementById('comboImage').style.display='none';document.getElementById('comboMessage').textContent='Your character will appear here after you create it.';document.getElementById('saveButton').disabled=true;updateSummary();saveSelectionState()}
 function newInstruction(){const i=instructions[Math.floor(Math.random()*instructions.length)];document.getElementById('instruction').textContent=i.task;document.getElementById('sentence').placeholder=i.example}
 function createCreature(){if(!selections.animal||!selections.bodyparts.length||!selections.clothes){document.getElementById('comboMessage').textContent='Choose an animal, at least one body part and one clothing item first.';return}showCombo()}
-async function showCombo(){const id=++requestId,name=(document.getElementById('creatureName').value.trim()||'My Creature'),ability=(document.getElementById('creatureAbility').value.trim()||'I can do amazing things!'),personality=document.getElementById('creaturePersonality').value;const parts=selections.bodyparts.map(bp=>`${Math.floor(Math.random()*3)+3} ${bp}`).join(', ');const prompt=`Create one original child-friendly 2D fantasy creature character for an English learning game. Main animal: ${selections.animal}. Include these unusual features: ${parts}. The creature wears ${selections.clothes}. Character name: ${name}. Special ability: ${ability}. Personality: ${personality}. Full body, front-facing, centered, friendly expressive face, playful polished storybook game art, simple uncluttered pale background, no text, no labels, no watermark. Make the silhouette clear and suitable as a future 2D puppet character concept. Keep every requested feature visible.`;const img=document.getElementById('comboImage'),msg=document.getElementById('comboMessage'),create=document.getElementById('createButton'),save=document.getElementById('saveButton');msg.textContent=loadingMessages[Math.floor(Math.random()*loadingMessages.length)];img.style.display='none';create.disabled=true;save.disabled=true;try{const r=await fetch(`${BACKEND}/api/generate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});if(!r.ok)throw new Error(await r.text());const data=await r.json();if(data.error)throw new Error(data.error);const base64=data.imageBase64||data.base64||data.artifacts?.[0]?.base64;if(!base64)throw new Error('No image returned');if(id!==requestId)return;img.src=`data:image/png;base64,${base64}`;img.alt=`${name}, custom creature`;img.style.display='block';msg.textContent=`✨ Meet ${name}! Your creature concept is ready.`;latestCreature={id:`bbx2-${Date.now()}`,name,animal:selections.animal,bodyparts:[...selections.bodyparts],clothes:selections.clothes,ability,personality,learnerLevel:'A1 starter',xp:0,visualVersion:1,rigVersion:0,rigStatus:'concept-art-not-yet-rigged',createdAt:new Date().toISOString(),imageBase64:base64};save.disabled=false;persistCreatedCreature(latestCreature);localStorage.setItem('bbx2-current-creature',JSON.stringify({...latestCreature,imageBase64:undefined}))}catch(e){console.error(e);if(id===requestId)msg.textContent=errorMessages[Math.floor(Math.random()*errorMessages.length)]}finally{if(id===requestId)create.disabled=false}}
+async function showCombo(){
+ const id=++requestId;
+ const name=document.getElementById('creatureName').value.trim()||'My Creature';
+ const ability=document.getElementById('creatureAbility').value.trim()||'I can do amazing things!';
+ const personality=document.getElementById('creaturePersonality').value;
+ const parts=selections.bodyparts.map(bp=>`${Math.floor(Math.random()*3)+3} ${bp}`).join(', ');
+ const prompt=`Create one original child-friendly 2D fantasy creature character for an English learning game. Main animal: ${selections.animal}. Include these unusual features: ${parts}. The creature wears ${selections.clothes}. Character name: ${name}. Special ability: ${ability}. Personality: ${personality}. Full body, front-facing, centered, friendly expressive face, playful polished storybook game art, simple uncluttered pale background, no text, no labels, no watermark. Make the silhouette clear and suitable as a future 2D puppet character concept. Keep every requested feature visible.`;
+ const img=document.getElementById('comboImage'),msg=document.getElementById('comboMessage'),create=document.getElementById('createButton'),save=document.getElementById('saveButton');
+ msg.textContent=loadingMessages[Math.floor(Math.random()*loadingMessages.length)];img.style.display='none';create.disabled=true;save.disabled=true;
+ try{
+  const response=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+  const raw=await response.text();
+  let data={};try{data=raw?JSON.parse(raw):{}}catch{data={details:raw.slice(0,350)}}
+  if(!response.ok){
+   const detail=data.details||data.error||`Unexpected response (HTTP ${response.status}).`;
+   throw new Error(`Image API returned HTTP ${response.status}: ${String(detail).slice(0,350)}`);
+  }
+  if(data.error)throw new Error(data.details?`${data.error} — ${data.details}`:data.error);
+  const base64=data.imageBase64||data.base64||data.artifacts?.[0]?.base64;
+  if(!base64)throw new Error('The API responded successfully but did not return image data. Check the Vercel function response.');
+  if(id!==requestId)return;
+  const mimeType=data.mimeType||'image/png';
+  img.src=`data:${mimeType};base64,${base64}`;img.alt=`${name}, custom creature`;img.style.display='block';
+  msg.textContent=`✨ Meet ${name}! Your creature concept is ready.`;
+  latestCreature={id:`bbx3-${Date.now()}`,name,animal:selections.animal,bodyparts:[...selections.bodyparts],clothes:selections.clothes,ability,personality,learnerLevel:'A1 starter',xp:0,visualVersion:1,rigVersion:0,rigStatus:'concept-art-not-yet-rigged',createdAt:new Date().toISOString(),imageBase64:base64,mimeType};
+  save.disabled=false;persistCreatedCreature(latestCreature);localStorage.setItem('bbx2-current-creature',JSON.stringify({...latestCreature,imageBase64:undefined}));
+ }catch(e){
+  console.error('BrainBoom X³ image-generation diagnostic:',e);
+  if(id===requestId)msg.textContent=`Image generation failed. ${e?.message||'Unknown error'} Open the browser Console (F12) for details.`;
+ }finally{if(id===requestId)create.disabled=false}
+}
 function saveCreature(){if(!latestCreature)return;const safe=safeName(latestCreature.name),profile={...latestCreature};delete profile.imageBase64;const blob=new Blob([JSON.stringify(profile,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${safe}-profile.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);const imageLink=document.createElement('a');imageLink.href=`data:image/png;base64,${latestCreature.imageBase64}`;imageLink.download=`${safe}-concept.png`;document.body.appendChild(imageLink);imageLink.click();imageLink.remove();document.getElementById('comboMessage').textContent=`💾 ${latestCreature.name} saved as an image + profile.`}
 function safeName(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'my-creature'}
 function saveSelectionState(){try{localStorage.setItem('bbx2-part2-selections',JSON.stringify(selections))}catch(e){}}
