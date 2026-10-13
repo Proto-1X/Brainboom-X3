@@ -39,10 +39,142 @@ if(avatar){
         '<img src="'+creature.icon+'" alt="'+safe(creature.name||"My creature")+'" style="width:100%;height:100%;object-fit:contain;border-radius:16px;">'+
         '<span>'+safe(creature.name||"My Creature")+'</span>';
     }
+  
   }catch(e){
     console.warn("Could not load creature in Play page",e);
   }
 }
+
+// AI Creature Chat — added below the existing guide
+const guide = host.querySelector(".guide-card");
+
+if (guide && !host.querySelector("#creatureChat")) {
+  const chat = document.createElement("section");
+  chat.id = "creatureChat";
+  chat.className = "lesson-card";
+  chat.innerHTML = `
+    <p class="eyebrow">TALK TO YOUR CREATURE</p>
+    <h3 id="chatCreatureName">Creature Chat</h3>
+    <p>Practise English with your AI adventure companion!</p>
+    <div id="creatureChatMessages"
+         role="log"
+         aria-live="polite"
+         style="min-height:100px;max-height:260px;overflow-y:auto;padding:12px;background:#f7f8fc;border-radius:12px;margin:16px 0;">
+      <p>Your creature is ready to meet you. Say hello!</p>
+    </div>
+    <form id="creatureChatForm">
+      <label for="creatureChatInput">Your message</label>
+      <textarea id="creatureChatInput"
+                rows="2"
+                maxlength="500"
+                placeholder="Hello! What can you do?"
+                required></textarea>
+      <button class="btn" id="creatureChatSend" type="submit">
+        Send message
+      </button>
+    </form>
+    <p id="creatureChatStatus" role="status"></p>
+  `;
+
+  guide.insertAdjacentElement("afterend", chat);
+
+  let creature = {
+    name: "Buddy",
+    animal: "a friendly fantasy creature",
+    personality: "friendly and curious"
+  };
+
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem("bbx2-player-creatures") || "[]"
+    );
+
+    if (saved.length) {
+      creature = {
+        name: saved[0].name || "Buddy",
+        animal: saved[0].animal || "a friendly fantasy creature",
+        personality: saved[0].personality || "friendly and curious"
+      };
+    }
+  } catch (error) {
+    console.warn("Could not load creature details", error);
+  }
+
+  chat.querySelector("#chatCreatureName").textContent =
+    "Chat with " + creature.name;
+
+  const messages = chat.querySelector("#creatureChatMessages");
+  const form = chat.querySelector("#creatureChatForm");
+  const input = chat.querySelector("#creatureChatInput");
+  const send = chat.querySelector("#creatureChatSend");
+  const status = chat.querySelector("#creatureChatStatus");
+
+  function addChatMessage(speaker, text, isCreature) {
+    const bubble = document.createElement("p");
+    bubble.style.cssText =
+      "padding:10px 12px;border-radius:12px;margin:8px 0;" +
+      (isCreature
+        ? "background:#e4f8e9;"
+        : "background:#e2edff;");
+
+    const label = document.createElement("strong");
+    label.textContent = speaker + ": ";
+
+    bubble.appendChild(label);
+    bubble.appendChild(document.createTextNode(text));
+    messages.appendChild(bubble);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  form.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    const message = input.value.trim();
+    if (!message || send.disabled) return;
+
+    addChatMessage("You", message, false);
+    input.value = "";
+    send.disabled = true;
+    send.textContent = "Thinking...";
+    status.textContent = "Your creature is thinking...";
+
+    try {
+      const response = await fetch("/api/creature-chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message,
+          creature
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Your creature could not reply."
+        );
+      }
+
+      addChatMessage(
+        data.creature || creature.name,
+        data.reply,
+        true
+      );
+      status.textContent = "Your creature replied!";
+    } catch (error) {
+      status.textContent =
+        error.message || "Please try sending your message again.";
+    } finally {
+      send.disabled = false;
+      send.textContent = "Send message";
+      input.focus();
+    }
+  });
+}
+
 }
 function renderActivity(s){if(view==="lesson")return '<button class="btn begin-checkpoint" id="beginCheckpoint">'+(progress.started[active]?"Continue to checkpoint":"I understand - begin checkpoint")+'</button>';
 if(s.type==="quiz")return '<p>Answer all five questions. You need four correct to pass.</p><div class="quiz-list">'+s.questions.map((q,i)=>'<fieldset class="quiz-question"><legend>'+(i+1)+'. '+q.q+'</legend>'+q.options.map((o,j)=>'<label><input type="radio" name="q'+i+'" data-answer value="'+j+'" '+(progress.answers["q"+i]===j?"checked":"")+'> '+o+'</label>').join("")+'</fieldset>').join("")+'</div><button class="btn" id="submitQuiz">Check my answers</button>'+resultMarkup(s);
