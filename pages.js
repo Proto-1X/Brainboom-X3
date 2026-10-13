@@ -73,6 +73,9 @@ if (guide && !host.querySelector("#creatureChat")) {
         Send message
       </button>
     </form>
+        <button class="btn secondary" id="replayCreatureVoice" type="button">
+      🔊 Replay voice
+    </button>
     <p id="creatureChatStatus" role="status"></p>
   `;
 
@@ -108,6 +111,16 @@ if (guide && !host.querySelector("#creatureChat")) {
   const input = chat.querySelector("#creatureChatInput");
   const send = chat.querySelector("#creatureChatSend");
   const status = chat.querySelector("#creatureChatStatus");
+
+  const replayVoice = chat.querySelector("#replayCreatureVoice");
+
+  replayVoice.addEventListener("click", function() {
+    if (lastCreatureReply) {
+      speakCreature(lastCreatureReply);
+    } else {
+      status.textContent = "Your creature has not spoken yet.";
+    }
+  });
 
   let lastCreatureReply = "";
 
@@ -190,12 +203,17 @@ if (guide && !host.querySelector("#creatureChat")) {
         );
       }
 
+      
+      lastCreatureReply = data.reply;
+
       addChatMessage(
         data.creature || creature.name,
         data.reply,
         true
       );
-      status.textContent = "Your creature replied!";
+
+      speakCreature(lastCreatureReply);
+
     } catch (error) {
       status.textContent =
         error.message || "Please try sending your message again.";
