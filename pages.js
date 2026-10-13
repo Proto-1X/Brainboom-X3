@@ -437,8 +437,14 @@ async function requestTutorFeedback(score) {
       throw new Error("AI feedback unavailable");
     }
 
-    feedback.textContent =
-      creature.name + " says: " + data.reply;
+    const tutorMessage =
+      creature.name + " says: " + checks + " " + data.reply;
+
+    feedback.textContent = tutorMessage;
+
+    if (typeof speakCreature === "function") {
+      speakCreature(data.reply);
+    }
 
   } catch (error) {
     console.warn("AI tutor feedback failed", error);
