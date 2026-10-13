@@ -13,6 +13,7 @@ const levels=[
 let progress;try{progress=JSON.parse(localStorage.getItem(KEY))||{}}catch{progress={}}
 progress.started=progress.started||{};progress.completed=progress.completed||{};progress.scores=progress.scores||{};progress.answers=progress.answers||{};progress.draft=progress.draft||"";
 let active=progress.active||"grammar",view="lesson",notice="",lastScore=null,lastPassed=false;
+  let speakTutorFeedback = null;
 const allowed=id=>id==="grammar"||id==="sentences"&&progress.completed.grammar||id==="story"&&progress.completed.sentences;
 function save(){progress.active=active;try{localStorage.setItem(KEY,JSON.stringify(progress))}catch{}}
 function safe(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -246,6 +247,8 @@ if (guide && !host.querySelector("#creatureChat")) {
 
     window.speechSynthesis.speak(utterance);
   }
+  
+  speakTutorFeedback = speakCreature;
 
   function addChatMessage(speaker, text, isCreature) {
     const bubble = document.createElement("p");
@@ -442,8 +445,8 @@ async function requestTutorFeedback(score) {
 
     feedback.textContent = tutorMessage;
 
-    if (typeof speakCreature === "function") {
-      speakCreature(data.reply);
+    if (speakTutorFeedback) {
+      speakTutorFeedback(data.reply);
     }
 
   } catch (error) {
