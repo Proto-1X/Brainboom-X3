@@ -347,7 +347,7 @@ function resultMarkup(s) {
         "%. Review the lesson and give it another try.") +
     '</p>' +
 
-    (active === "grammar" || active === "sentences"
+    (active === "grammar" || active === "sentences" || active === "story"
       ? '<div id="aiTutorFeedback" role="status" ' +
         'style="margin-top:12px;padding:12px;border-radius:12px;' +
         'background:#f0edff;">' +
@@ -457,8 +457,7 @@ async function requestWritingTutorFeedback(text, score) {
   const feedback = host.querySelector("#aiTutorFeedback");
   if (!feedback) return;
 
-  feedback.textContent =
-    "Your creature is reading your sentence...";
+  feedback.textContent = "Your creature is checking your writing...";
 
   let creature = {
     name: "Buddy",
@@ -482,16 +481,42 @@ async function requestWritingTutorFeedback(text, score) {
     console.warn("Could not load tutor creature", error);
   }
 
-  const pupilWriting = text.slice(0, 250);
+  // Check capital letters and punctuation directly.
+  const trimmed = text.trim();
+  const issues = [];
 
-  const message =
-    "A pupil is doing Sentence Studio. Their writing is: \"" +
-    pupilWriting +
-    "\". Their checklist score is " + score +
-    "%. Give kind, simple feedback about their actual writing. " +
-    "Mention one thing done well and, if useful, one improvement. " +
-    "Show a corrected example only when helpful. " +
-    "Do not invent mistakes. Use no more than 3 short sentences.";
+  if (trimmed && !/^[A-Z]/.test(trimmed)) {
+    issues.push("The first letter must be a capital letter.");
+  }
+
+  if (trimmed && !/[.!?]$/.test(trimmed)) {
+    issues.push("The writing must end with a full stop, question mark, or exclamation mark.");
+  }
+
+  if (trimmed && /[.!?]\s+[a-z]/.test(trimmed)) {
+    issues.push("A new sentence must begin with a capital letter.");
+  }
+
+  if (trimmed && /[.!?]{2,}$/.test(trimmed)) {
+    issues.push("Use one ending punctuation mark.");
+  }
+
+  const message = [
+    "You are " + creature.name +
+      ", the pupil's friendly English writing tutor.",
+    "The pupil is completing Sentence Studio.",
+    "Pupil's exact writing: " + JSON.stringify(trimmed.slice(0, 250)),
+    "Checklist score: " + score + "%.",
+    "Programmatically detected issues: " +
+      (issues.length ? issues.join(" ") : "No capitalisation or ending-punctuation issues detected."),
+    "Explain the detected issues clearly and kindly.",
+    "If the first letter is not capitalised, show the sentence starting with a capital.",
+    "If ending punctuation is missing, show where the full stop, question mark, or exclamation mark belongs.",
+    "Do not say these features are correct if the checks found an error.",
+    "Also comment briefly on one other useful writing improvement, if needed.",
+    "Use simple English and no more than 3 short sentences.",
+    "Do not invent errors."
+  ].join("\n").slice(0, 490);
 
   try {
     const response = await fetch("/api/creature-chat", {
@@ -508,15 +533,20 @@ async function requestWritingTutorFeedback(text, score) {
       throw new Error("Tutor feedback unavailable");
     }
 
+    // Show deterministic errors as well as the AI tutor's reply.
+    const checks = issues.length
+      ? "Writing checks: " + issues.join(" ")
+      : "Writing checks: Your first letter and ending punctuation look correct.";
+
     feedback.textContent =
-      creature.name + " says: " + data.reply;
+      creature.name + " says: " + checks + " " + data.reply;
 
   } catch (error) {
     console.warn("Writing tutor feedback failed", error);
 
-    feedback.textContent =
-      "Your writing score is saved! Your creature cannot give " +
-      "feedback right now. Please try again later.";
+    feedback.textContent = issues.length
+      ? "Writing checks: " + issues.join(" ")
+      : "Your writing score is saved, but your creature cannot give extra feedback right now.";
   }
 }
 function submitWriting(){const text=host.querySelector("#writingAnswer").value.trim();progress.draft=text;save();if(!text){notice="Write your response before scoring.";render();return}const score = scoreWriting(
@@ -526,7 +556,8 @@ function submitWriting(){const text=host.querySelector("#writingAnswer").value.t
 
 finish(score);
 
-if (active === "sentences") {
+
+if (active === "sentences" || active === "story") {
   requestWritingTutorFeedback(text, score);
 }}
 render()
