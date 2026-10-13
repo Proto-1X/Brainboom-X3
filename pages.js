@@ -20,7 +20,33 @@ function render(){const stage=levels.find(x=>x.id===active)||levels[0];if(!allow
 host.innerHTML='<div class="play-grid"><section class="play-main"><header class="play-heading"><p class="eyebrow">PLAY ? YOUR LEARNING JOURNEY</p><h2>Learn it. Try it. Master it.</h2><p>Pass each checkpoint with 80% or more to unlock the next stage.</p></header><nav class="level-tabs" aria-label="Learning stages">'+levels.map((x,i)=>'<button class="level-tab '+(x.id===active?"current ":"")+(progress.completed[x.id]?"passed":"")+'" data-level="'+x.id+'" '+(allowed(x.id)?"":"disabled")+'><span>Stage '+(i+1)+'</span><b>'+x.short+'</b><small>'+(progress.completed[x.id]?"Passed "+progress.scores[x.id]+"%":allowed(x.id)?"Unlocked":"Locked")+'</small></button>').join("")+'</nav><div class="lesson-card"><p class="eyebrow">'+(view==="lesson"?"LESSON":"CHECKPOINT")+' ? '+current.title.toUpperCase()+'</p><h3>'+current.title+'</h3><p>'+current.lesson+'</p>'+(current.tipline?'<p class="instruction">'+current.tipline+'</p>':"")+renderActivity(current)+'<p class="play-message" role="status">'+safe(notice)+'</p></div></section><aside class="guide-card"><div class="guide-avatar" id="playCreatureAvatar"><div class="avatar-face"><i></i><i></i><b></b></div><span>Create a creature to meet your guide!</span></div><p class="eyebrow">YOUR ADVENTURE GUIDE</p><h3>Creature Guide</h3><p>'+current.tip+'</p><div class="guide-tip"><b>Guide tip</b><br>Take your time. You can retry a checkpoint whenever you need.</div><p class="guide-score">Mastery pass mark: <strong>'+PASS+'%</strong></p></aside></div>';
 host.querySelectorAll("[data-level]").forEach(b=>b.onclick=()=>{if(!allowed(b.dataset.level))return;active=b.dataset.level;view="lesson";notice="";lastScore=null;save();render()});
 const begin=host.querySelector("#beginCheckpoint");if(begin)begin.onclick=()=>{progress.started[active]=true;view="activity";notice="";save();render()};
-host.querySelectorAll("[data-answer]").forEach(r=>r.onchange=()=>{progress.answers[r.name]=Number(r.value);save()});
+
+host.querySelectorAll("[data-answer]").forEach(r => {
+  r.onchange = () => {
+    progress.answers[r.name] = Number(r.value);
+    save();
+
+    const questionIndex = Number(r.name.slice(1));
+    const question = levels.find(x => x.id === active)
+      .questions[questionIndex];
+
+    const feedback = host.querySelector(
+      "#answerFeedback" + questionIndex
+    );
+
+    if (feedback) {
+      const isCorrect = Number(r.value) === question.a;
+
+      feedback.textContent = isCorrect
+        ? "Correct! Great work!"
+        : "Good try! The correct answer is: " +
+          question.options[question.a];
+
+      feedback.style.color = isCorrect ? "#16794b" : "#a34b25";
+    }
+  };
+});
+
 const quiz=host.querySelector("#submitQuiz");if(quiz)quiz.onclick=submitQuiz;
 const draft=host.querySelector("#writingAnswer");if(draft)draft.oninput=()=>{progress.draft=draft.value;save()};
 const submit=host.querySelector("#submitWriting");if(submit)submit.onclick=submitWriting;
@@ -294,7 +320,13 @@ if (guide && !host.querySelector("#creatureChat")) {
 
 }
 function renderActivity(s){if(view==="lesson")return '<button class="btn begin-checkpoint" id="beginCheckpoint">'+(progress.started[active]?"Continue to checkpoint":"I understand - begin checkpoint")+'</button>';
-if(s.type==="quiz")return '<p>Answer all five questions. You need four correct to pass.</p><div class="quiz-list">'+s.questions.map((q,i)=>'<fieldset class="quiz-question"><legend>'+(i+1)+'. '+q.q+'</legend>'+q.options.map((o,j)=>'<label><input type="radio" name="q'+i+'" data-answer value="'+j+'" '+(progress.answers["q"+i]===j?"checked":"")+'> '+o+'</label>').join("")+'</fieldset>').join("")+'</div><button class="btn" id="submitQuiz">Check my answers</button>'+resultMarkup(s);
+if(s.type==="quiz")return '<p>Answer all five questions. You need four correct to pass.</p><div class="quiz-list">'+s.questions.map((q,i)=>'<fieldset class="quiz-question"><legend>'+(i+1)+'. '+q.q+'</legend>'+
+q.options.map((o,j)=>
+  '<label><input type="radio" name="q'+i+'" data-answer value="'+j+'" '+(progress.answers["q"+i]===j?"checked":"")+'> '+o+'</label>'
+).join("")+
+'<p class="answer-feedback" id="answerFeedback'+i+'" role="status"></p>'+
+'</fieldset>'
+).join("")+'</div><button class="btn" id="submitQuiz">Check my answers</button>'+resultMarkup(s);
 return '<p>'+s.tipline+'</p><textarea id="writingAnswer" rows="'+(s.type==="story"?10:5)+'" placeholder="'+(s.type==="story"?"Write your creature's story here...":"Write your sentence here...")+'">'+safe(progress.draft)+'</textarea><ul class="rubric">'+s.checks.map(x=>'<li>'+x+'</li>').join("")+'</ul><button class="btn" id="submitWriting">Score my writing</button>'+resultMarkup(s)}
 function resultMarkup(s){if(lastScore===null)return "";const passed=lastPassed;return '<div class="score-result '+(passed?"passed":"retry-result")+'"><h4>'+(passed?"Checkpoint passed!":"Not quite - try again")+'</h4><p>Your score: <strong>'+lastScore+'%</strong>. '+(passed?"The next stage is unlocked.":"You need at least "+PASS+"%. Review the lesson and give it another try.")+'</p>'+(passed&&active!=="story"?'<button class="btn secondary" id="continueStage">Continue to '+(active==="grammar"?"sentence writing":"the Story Chapter")+'</button>':passed?'<p>You completed the final chapter. Your creature is proud of you!</p>':'<button class="btn secondary" id="retry">Try checkpoint again</button>')+'</div>'}
 function finish(score){lastScore=score;lastPassed=score>=PASS;progress.scores[active]=score;if(lastPassed){progress.completed[active]=true;progress.xp=(progress.xp||0)+score;notice="Mastery recorded and saved on this device."}else notice="Checkpoint not passed yet. Read the lesson and retry.";save();render()}
