@@ -138,7 +138,7 @@ if (guide && !host.querySelector("#creatureChat")) {
     talkingMouth.style.cssText = [
       "position:absolute",
       "left:50%",
-      "top:45%",
+      "top:42%",
       "width:18px",
       "height:5px",
       "transform:translateX(-50%)",
