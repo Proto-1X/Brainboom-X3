@@ -109,6 +109,38 @@ if (guide && !host.querySelector("#creatureChat")) {
   const send = chat.querySelector("#creatureChatSend");
   const status = chat.querySelector("#creatureChatStatus");
 
+  let lastCreatureReply = "";
+
+  function speakCreature(text) {
+    if (!("speechSynthesis" in window)) {
+      status.textContent =
+        "Voice playback is not supported in this browser.";
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-GB";
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+
+    utterance.onstart = function() {
+      status.textContent = creature.name + " is speaking...";
+    };
+
+    utterance.onend = function() {
+      status.textContent = creature.name + " has finished speaking.";
+    };
+
+    utterance.onerror = function() {
+      status.textContent =
+        "Voice playback stopped. You can try Replay voice.";
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
   function addChatMessage(speaker, text, isCreature) {
     const bubble = document.createElement("p");
     bubble.style.cssText =
