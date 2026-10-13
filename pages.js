@@ -347,7 +347,7 @@ function resultMarkup(s) {
         "%. Review the lesson and give it another try.") +
     '</p>' +
 
-    (active === "grammar"
+    (active === "grammar" || active === "sentences"
       ? '<div id="aiTutorFeedback" role="status" ' +
         'style="margin-top:12px;padding:12px;border-radius:12px;' +
         'background:#f0edff;">' +
@@ -452,7 +452,83 @@ const s=levels.find(x=>x.id===active);let correct=0;for(let i=0;i<s.questions.le
 finish(score);
 requestTutorFeedback(score);}
 function scoreWriting(text,s){const words=text.trim().split(/\s+/).filter(Boolean),sentences=(text.match(/[.!?]+(?:\s|$)/g)||[]).length,checks=s.type==="story"?[words.length>=40,sentences>=3,/^[A-Z]/.test(text.trim())&&/[.!?]\s+[A-Z]/.test(text),/[.!?]$/.test(text.trim()),/\b(first|then|because|finally|after)\b/i.test(text)]:[words.length>=6,/^[A-Z]/.test(text.trim()),/[.!?]$/.test(text.trim()),/\bmy creature\b/i.test(text),/\bi can\b/i.test(text)];return Math.round(checks.filter(Boolean).length/checks.length*100)}
-function submitWriting(){const text=host.querySelector("#writingAnswer").value.trim();progress.draft=text;save();if(!text){notice="Write your response before scoring.";render();return}finish(scoreWriting(text,levels.find(x=>x.id===active)))}
+
+async function requestWritingTutorFeedback(text, score) {
+  const feedback = host.querySelector("#aiTutorFeedback");
+  if (!feedback) return;
+
+  feedback.textContent =
+    "Your creature is reading your sentence...";
+
+  let creature = {
+    name: "Buddy",
+    animal: "a friendly fantasy creature",
+    personality: "friendly and curious"
+  };
+
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem("bbx2-player-creatures") || "[]"
+    );
+
+    if (saved.length) {
+      creature = {
+        name: saved[0].name || "Buddy",
+        animal: saved[0].animal || "a friendly fantasy creature",
+        personality: saved[0].personality || "friendly and curious"
+      };
+    }
+  } catch (error) {
+    console.warn("Could not load tutor creature", error);
+  }
+
+  const pupilWriting = text.slice(0, 250);
+
+  const message =
+    "A pupil is doing Sentence Studio. Their writing is: \"" +
+    pupilWriting +
+    "\". Their checklist score is " + score +
+    "%. Give kind, simple feedback about their actual writing. " +
+    "Mention one thing done well and, if useful, one improvement. " +
+    "Show a corrected example only when helpful. " +
+    "Do not invent mistakes. Use no more than 3 short sentences.";
+
+  try {
+    const response = await fetch("/api/creature-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message, creature })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.reply) {
+      throw new Error("Tutor feedback unavailable");
+    }
+
+    feedback.textContent =
+      creature.name + " says: " + data.reply;
+
+  } catch (error) {
+    console.warn("Writing tutor feedback failed", error);
+
+    feedback.textContent =
+      "Your writing score is saved! Your creature cannot give " +
+      "feedback right now. Please try again later.";
+  }
+}
+function submitWriting(){const text=host.querySelector("#writingAnswer").value.trim();progress.draft=text;save();if(!text){notice="Write your response before scoring.";render();return}const score = scoreWriting(
+  text,
+  levels.find(x => x.id === active)
+);
+
+finish(score);
+
+if (active === "sentences") {
+  requestWritingTutorFeedback(text, score);
+}}
 render()
 }
 
