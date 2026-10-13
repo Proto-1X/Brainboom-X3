@@ -124,6 +124,70 @@ if (guide && !host.querySelector("#creatureChat")) {
 
   let lastCreatureReply = "";
 
+  // Talking animation for the saved creature
+  const talkingAvatar = host.querySelector("#playCreatureAvatar");
+
+  let talkingMouth = null;
+
+  if (talkingAvatar && talkingAvatar.querySelector("img")) {
+    talkingAvatar.style.position = "relative";
+
+    talkingMouth = document.createElement("div");
+    talkingMouth.setAttribute("aria-hidden", "true");
+
+    talkingMouth.style.cssText = [
+      "position:absolute",
+      "left:50%",
+      "top:62%",
+      "width:18px",
+      "height:5px",
+      "transform:translateX(-50%)",
+      "background:#38233b",
+      "border:2px solid #fff",
+      "border-radius:50%",
+      "opacity:0",
+      "pointer-events:none",
+      "z-index:5"
+    ].join(";");
+
+    talkingAvatar.appendChild(talkingMouth);
+  }
+
+  function setCreatureTalking(isTalking) {
+    if (!talkingAvatar || !talkingMouth) return;
+
+    if (isTalking) {
+      talkingAvatar.style.animation =
+        "bbx3CreatureBounce 0.45s ease-in-out infinite alternate";
+
+      talkingMouth.style.opacity = "1";
+      talkingMouth.style.animation =
+        "bbx3CreatureMouth 0.22s ease-in-out infinite alternate";
+    } else {
+      talkingAvatar.style.animation = "";
+      talkingMouth.style.animation = "";
+      talkingMouth.style.opacity = "0";
+      talkingMouth.style.height = "5px";
+    }
+  }
+
+  if (!document.getElementById("bbx3TalkingAnimationStyles")) {
+    const animationStyles = document.createElement("style");
+    animationStyles.id = "bbx3TalkingAnimationStyles";
+    animationStyles.textContent = `
+      @keyframes bbx3CreatureBounce {
+        from { transform: translateY(0); }
+        to { transform: translateY(-4px); }
+      }
+
+      @keyframes bbx3CreatureMouth {
+        from { height: 3px; }
+        to { height: 13px; }
+      }
+    `;
+    document.head.appendChild(animationStyles);
+  }
+
   function speakCreature(text) {
     if (!("speechSynthesis" in window)) {
       status.textContent =
@@ -139,17 +203,20 @@ if (guide && !host.querySelector("#creatureChat")) {
     utterance.pitch = 1.1;
 
     utterance.onstart = function() {
+      setCreatureTalking(true);
       status.textContent = creature.name + " is speaking...";
     };
 
     utterance.onend = function() {
+      setCreatureTalking(false);
       status.textContent = creature.name + " has finished speaking.";
     };
 
     utterance.onerror = function() {
-      status.textContent =
-        "Voice playback stopped. You can try Replay voice.";
+      setCreatureTalking(false);
+      status.textContent = "Voice playback stopped. Try Replay voice.";
     };
+
 
     window.speechSynthesis.speak(utterance);
   }
