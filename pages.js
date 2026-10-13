@@ -248,7 +248,7 @@ if (guide && !host.querySelector("#creatureChat")) {
     window.speechSynthesis.speak(utterance);
   }
   
-  speakTutorFeedback = speakCreature;
+  window.bbx3SpeakTutorFeedback = speakCreature;
 
   function addChatMessage(speaker, text, isCreature) {
     const bubble = document.createElement("p");
@@ -445,8 +445,10 @@ async function requestTutorFeedback(score) {
 
     feedback.textContent = tutorMessage;
 
-    if (speakTutorFeedback) {
-      speakTutorFeedback(data.reply);
+    if (typeof window.bbx3SpeakTutorFeedback === "function") {
+      window.bbx3SpeakTutorFeedback(data.reply);
+    } else {
+      console.warn("Creature voice function is not available.");
     }
 
   } catch (error) {
