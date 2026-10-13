@@ -328,9 +328,129 @@ q.options.map((o,j)=>
 '</fieldset>'
 ).join("")+'</div><button class="btn" id="submitQuiz">Check my answers</button>'+resultMarkup(s);
 return '<p>'+s.tipline+'</p><textarea id="writingAnswer" rows="'+(s.type==="story"?10:5)+'" placeholder="'+(s.type==="story"?"Write your creature's story here...":"Write your sentence here...")+'">'+safe(progress.draft)+'</textarea><ul class="rubric">'+s.checks.map(x=>'<li>'+x+'</li>').join("")+'</ul><button class="btn" id="submitWriting">Score my writing</button>'+resultMarkup(s)}
-function resultMarkup(s){if(lastScore===null)return "";const passed=lastPassed;return '<div class="score-result '+(passed?"passed":"retry-result")+'"><h4>'+(passed?"Checkpoint passed!":"Not quite - try again")+'</h4><p>Your score: <strong>'+lastScore+'%</strong>. '+(passed?"The next stage is unlocked.":"You need at least "+PASS+"%. Review the lesson and give it another try.")+'</p>'+(passed&&active!=="story"?'<button class="btn secondary" id="continueStage">Continue to '+(active==="grammar"?"sentence writing":"the Story Chapter")+'</button>':passed?'<p>You completed the final chapter. Your creature is proud of you!</p>':'<button class="btn secondary" id="retry">Try checkpoint again</button>')+'</div>'}
+
+function resultMarkup(s) {
+  if (lastScore === null) return "";
+
+  const passed = lastPassed;
+
+  return '<div class="score-result ' +
+    (passed ? "passed" : "retry-result") + '">' +
+    '<h4>' +
+    (passed ? "Checkpoint passed!" : "Not quite - try again") +
+    '</h4>' +
+    '<p>Your score: <strong>' + lastScore +
+    '%</strong>. ' +
+    (passed
+      ? "The next stage is unlocked."
+      : "You need at least " + PASS +
+        "%. Review the lesson and give it another try.") +
+    '</p>' +
+
+    (active === "grammar"
+      ? '<div id="aiTutorFeedback" role="status" ' +
+        'style="margin-top:12px;padding:12px;border-radius:12px;' +
+        'background:#f0edff;">' +
+        'Your creature is preparing your feedback...' +
+        '</div>'
+      : '') +
+
+    (passed && active !== "story"
+      ? '<button class="btn secondary" id="continueStage">' +
+        'Continue to ' +
+        (active === "grammar"
+          ? "sentence writing"
+          : "the Story Chapter") +
+        '</button>'
+      : passed
+        ? '<p>You completed the final chapter. Your creature is proud of you!</p>'
+        : '<button class="btn secondary" id="retry">' +
+          'Try checkpoint again</button>') +
+
+    '</div>';
+}
+
 function finish(score){lastScore=score;lastPassed=score>=PASS;progress.scores[active]=score;if(lastPassed){progress.completed[active]=true;progress.xp=(progress.xp||0)+score;notice="Mastery recorded and saved on this device."}else notice="Checkpoint not passed yet. Read the lesson and retry.";save();render()}
-function submitQuiz(){const s=levels.find(x=>x.id===active);let correct=0;for(let i=0;i<s.questions.length;i++){if(progress.answers["q"+i]===undefined){notice="Answer all five questions before scoring.";render();return}if(progress.answers["q"+i]===s.questions[i].a)correct++}finish(Math.round(correct/s.questions.length*100))}
+function submitQuiz(){
+async function requestTutorFeedback(score) {
+  const feedback = host.querySelector("#aiTutorFeedback");
+  if (!feedback) return;
+
+  const stage = levels.find(x => x.id === "grammar");
+  const mistakes = [];
+
+  stage.questions.forEach((question, i) => {
+    const chosen = progress.answers["q" + i];
+
+    if (chosen !== question.a) {
+      mistakes.push(
+        "Q" + (i + 1) +
+        ": chose " + question.options[chosen] +
+        ", correct answer " + question.options[question.a]
+      );
+    }
+  });
+
+  const message = (
+    "I finished Grammar Garden with " + score + "%." +
+    (mistakes.length
+      ? " My mistakes: " + mistakes.join("; ")
+      : " I answered every question correctly.") +
+    " Give me kind, simple feedback and one useful grammar tip. " +
+    "Use no more than 2 short sentences."
+  ).slice(0, 490);
+
+  let creature = {
+    name: "Buddy",
+    animal: "a friendly fantasy creature",
+    personality: "friendly and curious"
+  };
+
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem("bbx2-player-creatures") || "[]"
+    );
+
+    if (saved.length) {
+      creature = {
+        name: saved[0].name || "Buddy",
+        animal: saved[0].animal || "a friendly fantasy creature",
+        personality: saved[0].personality || "friendly and curious"
+      };
+    }
+  } catch (error) {
+    console.warn("Could not load tutor creature", error);
+  }
+
+  try {
+    const response = await fetch("/api/creature-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message, creature })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.reply) {
+      throw new Error("AI feedback unavailable");
+    }
+
+    feedback.textContent =
+      creature.name + " says: " + data.reply;
+
+  } catch (error) {
+    console.warn("AI tutor feedback failed", error);
+
+    feedback.textContent =
+      "Your score is saved! Your creature couldn't give feedback " +
+      "just now. Please try again later.";
+  }
+}
+const s=levels.find(x=>x.id===active);let correct=0;for(let i=0;i<s.questions.length;i++){if(progress.answers["q"+i]===undefined){notice="Answer all five questions before scoring.";render();return}if(progress.answers["q"+i]===s.questions[i].a)correct++}const score = Math.round(correct / s.questions.length * 100);
+finish(score);
+requestTutorFeedback(score);}
 function scoreWriting(text,s){const words=text.trim().split(/\s+/).filter(Boolean),sentences=(text.match(/[.!?]+(?:\s|$)/g)||[]).length,checks=s.type==="story"?[words.length>=40,sentences>=3,/^[A-Z]/.test(text.trim())&&/[.!?]\s+[A-Z]/.test(text),/[.!?]$/.test(text.trim()),/\b(first|then|because|finally|after)\b/i.test(text)]:[words.length>=6,/^[A-Z]/.test(text.trim()),/[.!?]$/.test(text.trim()),/\bmy creature\b/i.test(text),/\bi can\b/i.test(text)];return Math.round(checks.filter(Boolean).length/checks.length*100)}
 function submitWriting(){const text=host.querySelector("#writingAnswer").value.trim();progress.draft=text;save();if(!text){notice="Write your response before scoring.";render();return}finish(scoreWriting(text,levels.find(x=>x.id===active)))}
 render()
